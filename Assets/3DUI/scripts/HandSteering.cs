@@ -5,9 +5,9 @@ using UnityEngine.XR;
 
 public class HandSteering: MonoBehaviour
 {
-    public float speedInMeterPerSecond = 1;
-    public float angleInDegreePerSecond = 25;
-    public float anglePerClick = 45;
+    [SerializeField] private float speedInMeterPerSecond = 1;
+    [SerializeField] private float angleInDegreePerSecond = 25;
+    [SerializeField] private float anglePerClick = 45;
 
     private InputDevice handDevice;
     private GameObject handController;
@@ -103,6 +103,16 @@ public class HandSteering: MonoBehaviour
                 if (bModeSnapRotation)
                 {
                     // do something here (Exercise tasks)
+
+                    if(thumbstickAxisValue.x < 0.9f)
+                    {
+                        trackingSpaceRoot.transform.Rotate(Vector3.up, -anglePerClick);
+                    }
+
+                    else if(thumbstickAxisValue.x > 0.9f)
+                    {
+                        trackingSpaceRoot.transform.Rotate(Vector3.down, anglePerClick);
+                    }
                 }
                 else
                 {
