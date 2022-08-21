@@ -5,14 +5,16 @@ using UnityEngine.XR;
 
 public class Jumping : MonoBehaviour
 {
-    public string RayCollisionLayer = "Default";
+    [SerializeField] private string RayCollisionLayer = "Default";
 
-    private InputDevice handDevice;
+    private InputDevice handDeviceLeft, handDeviceRight;
     private GameObject handControllerGameObject;
     private GameObject trackingSpaceRoot;
 
     private RaycastHit lastRayCastHit;
     private bool bButtonWasPressed = false;
+
+    [SerializeField] private GameObject newPos, oldPos;
 
 
     /// 
@@ -21,15 +23,18 @@ public class Jumping : MonoBehaviour
 
     void Start()
     {
+        getLeftHandDevice();
         getRightHandDevice();
-        getRighHandController();
+        getLeftHandController();
         getTrackingSpaceRoot();
+        getIndicatorLocation();
     }
 
     void Update()
     {
         getPointCollidingWithRayCasting();
         MoveTrackingSpaceRootWithJumping();
+        updateIndicatorLocation();
     }
 
 
@@ -38,10 +43,27 @@ public class Jumping : MonoBehaviour
     /// 
 
 
-    private void getRightHandDevice()
+    private void getLeftHandDevice()
     {
         var desiredCharacteristics = InputDeviceCharacteristics.HeldInHand
              | InputDeviceCharacteristics.Left
+             | InputDeviceCharacteristics.Controller;
+
+        var leftHandedControllers = new List<InputDevice>();
+        InputDevices.GetDevicesWithCharacteristics(desiredCharacteristics, leftHandedControllers);
+
+        foreach (var device in leftHandedControllers)
+        {
+            Debug.Log(string.Format("Device name '{0}' has characteristics '{1}'",
+                device.name, device.characteristics.ToString()));
+            handDeviceLeft = device;
+        }
+    }
+
+    private void getRightHandDevice()
+    {
+        var desiredCharacteristics = InputDeviceCharacteristics.HeldInHand
+             | InputDeviceCharacteristics.Right
              | InputDeviceCharacteristics.Controller;
 
         var rightHandedControllers = new List<InputDevice>();
@@ -51,9 +73,11 @@ public class Jumping : MonoBehaviour
         {
             Debug.Log(string.Format("Device name '{0}' has characteristics '{1}'",
                 device.name, device.characteristics.ToString()));
-            handDevice = device;
+            handDeviceRight = device;
         }
     }
+
+
 
     private void getTrackingSpaceRoot()
     {
@@ -61,7 +85,7 @@ public class Jumping : MonoBehaviour
         trackingSpaceRoot = XRRig.rig; // Gameobject representing the center of tracking space in virtual enviroment
     }
 
-    private void getRighHandController()
+    private void getLeftHandController()
     {
         handControllerGameObject = this.gameObject; // i.e. with this script component and an XR controller component
     }
@@ -70,6 +94,36 @@ public class Jumping : MonoBehaviour
     /// 
     ///  Update Functions 
     ///
+
+    private void getIndicatorLocation()
+    {
+        newPos = Instantiate(newPos, lastRayCastHit.point, Quaternion.identity);
+        oldPos = Instantiate(oldPos, lastRayCastHit.point, Quaternion.identity);
+    }
+
+    Vector2 thumbstickAxisValue; //  where left (-1.0,0.0), right (1.0,0.0), up (0.0,1.0), down (0.0,-1.0)
+
+    private void updateIndicatorLocation()
+    {
+        if (handDeviceRight.TryGetFeatureValue(CommonUsages.primary2DAxis, out thumbstickAxisValue))
+        {
+
+
+            if (thumbstickAxisValue.x > 0.9f)
+            {
+                newPos.transform.Rotate(Vector3.up);
+            }
+            if (thumbstickAxisValue.x < -0.9f)
+            {
+                newPos.transform.Rotate(Vector3.down);
+            }
+        }
+
+
+        newPos.transform.position = lastRayCastHit.point;
+
+
+    }
 
     private void getPointCollidingWithRayCasting()
     {
@@ -90,9 +144,9 @@ public class Jumping : MonoBehaviour
 
     private void MoveTrackingSpaceRootWithJumping()
     {
-        if (handDevice.isValid)
+        if (handDeviceLeft.isValid)
         {
-            if (handDevice.TryGetFeatureValue(CommonUsages.gripButton, out bool triggerButton))
+            if (handDeviceLeft.TryGetFeatureValue(CommonUsages.gripButton, out bool triggerButton))
             {
                 if (!bButtonWasPressed && triggerButton && lastRayCastHit.collider != null)
                 {
@@ -101,7 +155,11 @@ public class Jumping : MonoBehaviour
                 if (!triggerButton && bButtonWasPressed)
                 {
                     bButtonWasPressed = false;
+
+                    oldPos.transform.position = trackingSpaceRoot.transform.position;
+                    oldPos.transform.rotation = trackingSpaceRoot.transform.rotation;
                     trackingSpaceRoot.transform.position = lastRayCastHit.point;
+                    trackingSpaceRoot.transform.rotation = newPos.transform.rotation;
                     Debug.Log("Jumping! " + Time.deltaTime);
                 }
             }
