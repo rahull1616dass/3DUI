@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.XR;
+using UnityEngine.XR.Interaction.Toolkit;
 
 public class Jumping : MonoBehaviour
 {
@@ -13,6 +14,8 @@ public class Jumping : MonoBehaviour
 
     private RaycastHit lastRayCastHit;
     private bool bButtonWasPressed = false;
+    private bool triggerButton;
+    private bool isTriggerPressedOnCurrFrame;
 
     [SerializeField] private GameObject newPos, oldPos;
 
@@ -146,22 +149,48 @@ public class Jumping : MonoBehaviour
     {
         if (handDeviceLeft.isValid)
         {
-            if (handDeviceLeft.TryGetFeatureValue(CommonUsages.gripButton, out bool triggerButton))
+            if (handDeviceLeft.TryGetFeatureValue(CommonUsages.triggerButton, out isTriggerPressedOnCurrFrame))
             {
-                if (!bButtonWasPressed && triggerButton && lastRayCastHit.collider != null)
+                if (handDeviceLeft.TryGetFeatureValue(CommonUsages.gripButton, out triggerButton))
                 {
-                    bButtonWasPressed = true;
-                }
-                if (!triggerButton && bButtonWasPressed)
-                {
-                    bButtonWasPressed = false;
+                    if (!bButtonWasPressed && triggerButton && lastRayCastHit.collider != null &&!isTriggerPressedOnCurrFrame)
+                    {
+                        bButtonWasPressed = true;
+                    }
+                    if (!triggerButton && bButtonWasPressed && !isTriggerPressedOnCurrFrame)
+                    {
+                        bButtonWasPressed = false;
 
-                    oldPos.transform.position = trackingSpaceRoot.transform.position;
-                    oldPos.transform.rotation = trackingSpaceRoot.transform.rotation;
-                    trackingSpaceRoot.transform.position = lastRayCastHit.point;
-                    trackingSpaceRoot.transform.rotation = newPos.transform.rotation;
-                    Debug.Log("Jumping! " + Time.deltaTime);
+                        PlayAudio();
+                        CreateHaptic();
+
+                        oldPos.transform.position = trackingSpaceRoot.transform.position;
+                        oldPos.transform.rotation = trackingSpaceRoot.transform.rotation;
+                        trackingSpaceRoot.transform.position = lastRayCastHit.point;
+                        trackingSpaceRoot.transform.rotation = newPos.transform.rotation;
+                        Debug.Log("Jumping! " + Time.deltaTime);
+                    }
                 }
+            }
+        }
+    }
+
+    public void PlayAudio()
+    {
+
+    }
+
+    private void CreateHaptic()
+    {
+        HapticCapabilities hapticCapabilities;
+        if (handDeviceLeft.TryGetHapticCapabilities(out hapticCapabilities))
+        {
+            if (hapticCapabilities.supportsImpulse)
+            {
+                uint channel = 0;
+                float amplitude = 0.5f;
+                float duration = 0.5f;
+                handDeviceLeft.SendHapticImpulse(channel, amplitude, duration);
             }
         }
     }

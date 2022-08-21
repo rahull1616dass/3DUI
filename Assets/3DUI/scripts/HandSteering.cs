@@ -18,6 +18,7 @@ public class HandSteering: MonoBehaviour
     private bool bModeSnapRotation;
     private bool bModeSpeed;
     private bool isStickWasPressed;
+    private bool isStickPressedNow;
     private bool isTriggerPressedPrevFrame;
     private bool isTriggerPressedCurrFrame;
 
@@ -85,7 +86,7 @@ public class HandSteering: MonoBehaviour
         {
             // check if smooth or snap rotation mode
             // see https://docs.unity3d.com/Manual/xr_input.html
-            if (handDevice.TryGetFeatureValue(CommonUsages.primary2DAxisClick, out bool isStickPressedNow))
+            if (handDevice.TryGetFeatureValue(CommonUsages.primary2DAxisClick, out isStickPressedNow))
             {
                 if (isStickPressedNow)
                 {
@@ -101,7 +102,7 @@ public class HandSteering: MonoBehaviour
 
             }
 
-            if(handDevice.TryGetFeatureValue(CommonUsages.triggerButton, out bool isTriggerPressedCurrFrame))
+            if(handDevice.TryGetFeatureValue(CommonUsages.triggerButton, out isTriggerPressedCurrFrame))
             {
                 if (isTriggerPressedCurrFrame) { 
                     isTriggerPressedPrevFrame = true;

@@ -12,10 +12,13 @@ public class GrabthroughtAair : MonoBehaviour
 
 
 
-    private bool gButtonWasPressed = false;
-    public Vector3 OldPosition;
-    public int ScaleValue;
-    public int Scale = 5;
+    private bool bButtonWasPressed = false;
+    [SerializeField] private Vector3 OldPosition;
+    [SerializeField] private int ScaleValue;
+    [SerializeField] private int Scale = 1;
+    [SerializeField] private int velocity;
+    private bool isTriggerPressedOnCurrFrame;
+    private bool gripButton;
 
 
 
@@ -67,33 +70,35 @@ public class GrabthroughtAair : MonoBehaviour
     {
         if (handDeviceLeft.isValid)
         {
-            if (handDeviceLeft.TryGetFeatureValue(CommonUsages.gripButton, out bool gripButton))
+            if (handDeviceLeft.TryGetFeatureValue(CommonUsages.triggerButton, out isTriggerPressedOnCurrFrame))
             {
-                if (!gButtonWasPressed && gripButton)
+                if (handDeviceLeft.TryGetFeatureValue(CommonUsages.gripButton, out gripButton))
                 {
-                    gButtonWasPressed = true;
-                    Debug.Log("Grabbing! ");
-                    OldPosition = handControllerGameObject.transform.position;
+                    if (!bButtonWasPressed && gripButton && isTriggerPressedOnCurrFrame)
+                    {
+                        bButtonWasPressed = true;
+                        Debug.Log("Grabbing! ");
+                        OldPosition = handControllerGameObject.transform.position;
 
-                }
-                if (!gripButton && gButtonWasPressed)
-                {
-                    gButtonWasPressed = false;
+                    }
+                    if (!gripButton && bButtonWasPressed && isTriggerPressedOnCurrFrame)
+                    {
+                        bButtonWasPressed = false;
 
-                    Debug.Log("Not Grabbing! ");
-                }
-                if (gButtonWasPressed && gripButton)
-                {
+                        Debug.Log("Not Grabbing! ");
+                    }
+                    if (bButtonWasPressed && gripButton && isTriggerPressedOnCurrFrame)
+                    {
 
-                    trackingSpaceRoot.transform.position -=
-                    (handControllerGameObject.transform.position - OldPosition) * ScaleValue;
+                        trackingSpaceRoot.transform.position -=
+                        (handControllerGameObject.transform.position - OldPosition) * ScaleValue;
 
-                    OldPosition = handControllerGameObject.transform.position;
+                        OldPosition = handControllerGameObject.transform.position;
+                    }
+
                 }
 
             }
-
-
 
 
 
@@ -104,21 +109,27 @@ public class GrabthroughtAair : MonoBehaviour
 
     private void ScaleUp()
     {
-        Vector2 thumbstickAxisValue;
-        if (handDeviceLeft.TryGetFeatureValue(CommonUsages.primary2DAxis, out thumbstickAxisValue))
+        if (handDeviceLeft.isValid)
         {
-
-            if (thumbstickAxisValue.y < 0.9)
+            Vector2 thumbstickAxisValue;
+            if (handDeviceLeft.TryGetFeatureValue(CommonUsages.triggerButton, out isTriggerPressedOnCurrFrame))
             {
-                trackingSpaceRoot.transform.localScale += trackingSpaceRoot.transform.localScale * Time.deltaTime * Scale;
+                if (handDeviceLeft.TryGetFeatureValue(CommonUsages.primary2DAxis, out thumbstickAxisValue))
+                {
+
+                    if (thumbstickAxisValue.y < 0.9)
+                    {
+                        trackingSpaceRoot.transform.localScale += trackingSpaceRoot.transform.localScale * Time.deltaTime * Scale;
+                    }
+
+                    if (thumbstickAxisValue.y > -0.9)
+                    {
+                        trackingSpaceRoot.transform.localScale -= trackingSpaceRoot.transform.localScale * Time.deltaTime * Scale;
+                    }
+
+
+                }
             }
-
-            if (thumbstickAxisValue.y > -0.9)
-            {
-                trackingSpaceRoot.transform.localScale -= trackingSpaceRoot.transform.localScale * Time.deltaTime * Scale;
-            }
-
-
         }
     }
 }
