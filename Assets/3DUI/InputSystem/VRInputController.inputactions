@@ -1,0 +1,33 @@
+{
+    "name": "VRInputController",
+    "maps": [
+        {
+            "name": "UI Selection",
+            "id": "78e61dbb-fe79-440a-976e-6866f14be0f0",
+            "actions": [
+                {
+                    "name": "New action",
+                    "type": "Button",
+                    "id": "8854ca75-aab7-4354-94fb-9f0250697a5f",
+                    "expectedControlType": "Button",
+                    "processors": "AxisDeadzone(min=0.6)",
+                    "interactions": "Press"
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "7efd52e8-b061-4866-9036-18df1964bf04",
+                    "path": "",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "New action",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        }
+    ],
+    "controlSchemes": []
+}
