@@ -40,6 +40,7 @@ public class RayPicking : MonoBehaviour
         if (objectPickedUP == null)
         {
             GetTargetedObjectCollidingWithRayCasting();
+            GrabObject();
             UpdateObjectCollidingWithRay();
             UpdateFlagNewObjectCollidingWithRay();
             OutlineObjectCollidingWithRay();
@@ -96,6 +97,22 @@ public class RayPicking : MonoBehaviour
         {
             Debug.DrawRay(transform.position, transform.TransformDirection(Vector3.forward) * hit.distance, Color.yellow);
            // Debug.Log("Ray collided with:  " + hit.collider.gameObject + " collision point: " + hit.point);
+            Debug.DrawLine(hit.point, (hit.point + hit.normal * 2));
+            lastRayCastHit = hit;
+        }
+    }
+
+    private void GrabObject()
+    {
+        // see raycast example from https://docs.unity3d.com/ScriptReference/Physics.Raycast.html
+        if (Physics.Raycast(transform.position,
+            transform.TransformDirection(Vector3.forward),
+            out RaycastHit hit,
+            Mathf.Infinity,
+            1 << LayerMask.NameToLayer(RayCollisionLayer))) // 1 << because must use bit shifting to get final mask!
+        {
+            Debug.DrawRay(transform.position, transform.TransformDirection(Vector3.forward) * hit.distance, Color.yellow);
+            // Debug.Log("Ray collided with:  " + hit.collider.gameObject + " collision point: " + hit.point);
             Debug.DrawLine(hit.point, (hit.point + hit.normal * 2));
             lastRayCastHit = hit;
         }

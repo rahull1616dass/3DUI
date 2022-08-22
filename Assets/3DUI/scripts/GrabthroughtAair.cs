@@ -91,7 +91,7 @@ public class GrabthroughtAair : MonoBehaviour
                     {
 
                         trackingSpaceRoot.transform.position -=
-                        (handControllerGameObject.transform.position - OldPosition) * ScaleValue;
+                        (handControllerGameObject.transform.position - OldPosition) * velocity;
 
                         OldPosition = handControllerGameObject.transform.position;
                     }
