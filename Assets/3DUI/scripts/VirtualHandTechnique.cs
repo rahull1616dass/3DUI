@@ -6,11 +6,11 @@ using UnityEngine.XR.Interaction.Toolkit;
 
 public class VirtualHandTechnique : MonoBehaviour
 {
-    public float translationIncrement = 0.1f;
-    public float rotationIncrement = 1.0f;
-    public float thumbstickDeadZone = 0.5f;  // a bit of a dead zone (make it less sensitive to axis movement)
-    public string RayCollisionLayer = "Default";
-    public bool PickedUpObjectPositionNotControlledByPhysics = true; //otherwise object position will be still computed by physics engine, even when attached to ray
+    [SerializeField] private float translationIncrement = 0.1f;
+    [SerializeField] private float rotationIncrement = 1.0f;
+    [SerializeField] private float thumbstickDeadZone = 0.5f;  // a bit of a dead zone (make it less sensitive to axis movement)
+    [SerializeField] private string RayCollisionLayer = "Default";
+    [SerializeField] private bool PickedUpObjectPositionNotControlledByPhysics = true; //otherwise object position will be still computed by physics engine, even when attached to ray
 
     private InputDevice righHandDevice;
     private GameObject rightHandController;

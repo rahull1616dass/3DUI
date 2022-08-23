@@ -1,15 +1,16 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.XR;
 using UnityEngine.XR.Interaction.Toolkit;
 
-public class RayPicking : MonoBehaviour
+public class RaySelecting : MonoBehaviour
 {
     [SerializeField] private float translationIncrement = 0.1f;
     [SerializeField] private float rotationIncrement = 1.0f;
     [SerializeField] private float thumbstickDeadZone = 0.5f;  // a bit of a dead zone (make it less sensitive to axis movement)
-    [SerializeField] private string RayCollisionLayer = "Default";
+    [SerializeField] private string rayCollisionLayer = "Default";
     [SerializeField] private bool PickedUpObjectPositionNotControlledByPhysics = true; //otherwise object position will be still computed by physics engine, even when attached to ray
 
     private InputDevice righHandDevice;
@@ -17,13 +18,16 @@ public class RayPicking : MonoBehaviour
     private GameObject trackingSpaceRoot;
 
     private RaycastHit lastRayCastHit;
-    private bool bButtonWasPressed = false;
+    private bool bButtonPressedPrevFrame = false;
     private GameObject objectPickedUP = null;
+    private GameObject objectMarked = null;
     private GameObject previousObjectCollidingWithRay = null;
     private GameObject lastObjectCollidingWithRay = null;
     private bool IsThereAnewObjectCollidingWithRay = false;
+    private bool gButtonPressedNow;
 
-  
+    List<GameObject> listOfSelectedObjects = new List<GameObject>();
+
     /// 
     ///  Events
     /// 
@@ -40,14 +44,14 @@ public class RayPicking : MonoBehaviour
         if (objectPickedUP == null)
         {
             GetTargetedObjectCollidingWithRayCasting();
-            GrabObject();
+            GetTargetedObjectGrabbingByHand();
             UpdateObjectCollidingWithRay();
             UpdateFlagNewObjectCollidingWithRay();
             OutlineObjectCollidingWithRay();
         }
-        AttachOrDetachTargetedObject();
-        MoveTargetedObjectAlongRay();
-        RotateTargetedObjectOnLocalUpAxis();
+
+        MarkAndReMarkTargetObject();
+
     }
 
 
@@ -57,6 +61,9 @@ public class RayPicking : MonoBehaviour
 
     private void GetRightHandDevice()
     {
+        var inputDevices = new List<InputDevice>();
+        InputDevices.GetDevices(inputDevices);
+
         var desiredCharacteristics = InputDeviceCharacteristics.HeldInHand
             | InputDeviceCharacteristics.Right
             | InputDeviceCharacteristics.Controller;
@@ -93,23 +100,24 @@ public class RayPicking : MonoBehaviour
             transform.TransformDirection(Vector3.forward),
             out RaycastHit hit,
             Mathf.Infinity,
-            1 << LayerMask.NameToLayer(RayCollisionLayer))) // 1 << because must use bit shifting to get final mask!
+            1 << LayerMask.NameToLayer(rayCollisionLayer))) // 1 << because must use bit shifting to get final mask!
         {
             Debug.DrawRay(transform.position, transform.TransformDirection(Vector3.forward) * hit.distance, Color.yellow);
-           // Debug.Log("Ray collided with:  " + hit.collider.gameObject + " collision point: " + hit.point);
+            // Debug.Log("Ray collided with:  " + hit.collider.gameObject + " collision point: " + hit.point);
             Debug.DrawLine(hit.point, (hit.point + hit.normal * 2));
             lastRayCastHit = hit;
         }
     }
 
-    private void GrabObject()
+
+    private void GetTargetedObjectGrabbingByHand()
     {
         // see raycast example from https://docs.unity3d.com/ScriptReference/Physics.Raycast.html
         if (Physics.Raycast(transform.position,
             transform.TransformDirection(Vector3.forward),
             out RaycastHit hit,
             Mathf.Infinity,
-            1 << LayerMask.NameToLayer(RayCollisionLayer))) // 1 << because must use bit shifting to get final mask!
+            1 << LayerMask.NameToLayer(rayCollisionLayer))) // 1 << because must use bit shifting to get final mask!
         {
             Debug.DrawRay(transform.position, transform.TransformDirection(Vector3.forward) * hit.distance, Color.yellow);
             // Debug.Log("Ray collided with:  " + hit.collider.gameObject + " collision point: " + hit.point);
@@ -176,94 +184,102 @@ public class RayPicking : MonoBehaviour
         }
     }
 
-   
 
-    private void AttachOrDetachTargetedObject()
+
+
+
+    private void MarkAndReMarkTargetObject()
     {
         if (righHandDevice.isValid) // still connected?
         {
-            if (righHandDevice.TryGetFeatureValue(CommonUsages.primaryButton, out bool bButtonAPressedNow))
+            if (righHandDevice.TryGetFeatureValue(CommonUsages.triggerButton, out bool bButtonAPressedCurrFrame))
             {
-                if (!bButtonWasPressed && bButtonAPressedNow && lastRayCastHit.collider != null)
+                if (!bButtonPressedPrevFrame && bButtonAPressedCurrFrame && lastRayCastHit.collider != null)
                 {
-                    bButtonWasPressed = true;
+                    bButtonPressedPrevFrame = true;
                 }
-                if (!bButtonAPressedNow && bButtonWasPressed) // Button was released?
+
+                if (!bButtonAPressedCurrFrame && bButtonPressedPrevFrame) // Button was released?
                 {
-                    if (objectPickedUP != null) // already pick up an object?
-                    { 
-                        if (PickedUpObjectPositionNotControlledByPhysics)
+                    objectPickedUP = lastRayCastHit.collider.gameObject;
+
+                    if (listOfSelectedObjects.Contains(objectPickedUP) && listOfSelectedObjects.Count > 0)
+                    {
+                        PlayAudio();
+                        CreateHeptic();
+                        UnMarkObject(objectPickedUP);
+                        listOfSelectedObjects.RemoveAll(x => x.Equals(objectPickedUP));
+
+                        if (righHandDevice.TryGetFeatureValue(CommonUsages.gripButton, out bool gButtonPressedCurrFrame))
                         {
-                            Rigidbody rb = objectPickedUP.GetComponent<Rigidbody>();
-                            if (rb != null)
+                            if (!gButtonPressedCurrFrame)
                             {
-                                rb.isKinematic = false;
+                                foreach (GameObject actualObject in listOfSelectedObjects)
+                                {
+                                    actualObject.transform.parent = null;
+                                }
                             }
                         }
-                        objectPickedUP.transform.parent = null;
+                        else
+                        {
+                            PlayAudio();
+                            CreateHeptic();
+                            listOfSelectedObjects.Add(objectPickedUP);
+                            MarkObject(objectPickedUP);
+
+                            if (righHandDevice.TryGetFeatureValue(CommonUsages.gripButton, out bool gButtonPressedNow))
+                            {
+                                if (gButtonPressedNow)
+                                {
+                                    foreach (GameObject actualObject in listOfSelectedObjects)
+                                    {
+                                        actualObject.transform.parent = gameObject.transform;
+                                    }
+                                }
+                            }
+                        }
+
+                        bButtonPressedPrevFrame = false;
                         objectPickedUP = null;
-                        Debug.Log("Object released: " + objectPickedUP);
                     }
-                    else
-                    {
-                        GenerateSound(); 
-                        GenerateVibrations();
-                        
-                        objectPickedUP = lastRayCastHit.collider.gameObject;
-                        objectPickedUP.transform.parent = gameObject.transform; // see Transform.parent https://docs.unity3d.com/ScriptReference/Transform-parent.html?_ga=2.21222203.1039085328.1595859162-225834982.1593000816
-                        if (PickedUpObjectPositionNotControlledByPhysics)
-                        {
-                            Rigidbody rb = objectPickedUP.GetComponent<Rigidbody>();
-                            if (rb != null)
-                            {
-                                rb.isKinematic = true;
-                            }
-                        }
-                        Debug.Log("Object Picked up:" + objectPickedUP);
-                    }
-                    bButtonWasPressed = false;
                 }
             }
         }
     }
 
-    private void MoveTargetedObjectAlongRay()
+    private void MarkObject(GameObject actualObject)
     {
-        if (righHandDevice.isValid) // still connected?
+        var marker = actualObject.GetComponent<OutlineSelected>();
+        if (marker == null) // if not, we will add a component to be able to outline it
         {
-            if (righHandDevice.TryGetFeatureValue(CommonUsages.primary2DAxis, out Vector2 thumbstickAxis))
-            {
-                if (objectPickedUP != null) // already picked up an object?
-                {
-                    if (thumbstickAxis.y > thumbstickDeadZone || thumbstickAxis.y < -thumbstickDeadZone)
-                    {
-                        objectPickedUP.transform.position += transform.TransformDirection(Vector3.forward) * translationIncrement * thumbstickAxis.y;
-                        //Debug.Log("Move object along ray: " + objectPickedUP + " axis: " + thumbstickAxis);
-                    }
-                }
-            }
+            //Debug.Log("Outliner added t" + lastObjectCollidingWithRay.gameObject.ToString());
+            marker = lastObjectCollidingWithRay.AddComponent<OutlineSelected>();
         }
-    }
 
-    private void RotateTargetedObjectOnLocalUpAxis()
+        if (marker != null)
+        {
+            marker.enabled = true;
+            //Debug.Log("outline new object color"+ lastObjectCollidingWithRay);
+        }
+
+    }
+    private void UnMarkObject(GameObject actualObject)
     {
-        if (righHandDevice.isValid) // still connected?
+
+        var marker = actualObject.GetComponent<OutlineSelected>();
+        if (marker != null)
         {
-            if (righHandDevice.TryGetFeatureValue(CommonUsages.primary2DAxis, out Vector2 thumbstickAxis))
-            {
-                if (objectPickedUP != null) // already pick up an object?
-                {
-                    if (thumbstickAxis.x > thumbstickDeadZone || thumbstickAxis.x < -thumbstickDeadZone)
-                    {
-                        objectPickedUP.transform.Rotate(Vector3.up, rotationIncrement * thumbstickAxis.x, Space.Self);
-                    }
-                    //Debug.Log("Rotate Object: " + objectPickedUP + "axis " + thumbstickAxis);
-                }
-            }
+            marker.enabled = false;
+            //Debug.Log("outline new object color"+ previousObjectCollidingWithRay);
         }
+
     }
 
-    private void GenerateVibrations()
+
+
+
+
+    private void CreateHeptic()
     {
         HapticCapabilities capabilities;
         if (righHandDevice.TryGetHapticCapabilities(out capabilities))
@@ -278,10 +294,10 @@ public class RayPicking : MonoBehaviour
         }
     }
 
-    private void GenerateSound()
+    private void PlayAudio()
     {
         AudioSource audioSource = GetComponent<AudioSource>();
-        if (audioSource !=null)
+        if (audioSource != null)
         {
             audioSource.Play();
         }
