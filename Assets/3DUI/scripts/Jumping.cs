@@ -1,5 +1,6 @@
-﻿using System.Collections;
+﻿using UnityEngine.UIElements;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.XR;
 using UnityEngine.XR.Interaction.Toolkit;
@@ -18,6 +19,7 @@ public class Jumping : MonoBehaviour
     private bool isTriggerPressedOnCurrFrame;
 
     [SerializeField] private GameObject newPos, oldPos;
+    [SerializeField] private GameObject blackSqr;
 
 
     /// 
@@ -164,15 +166,40 @@ public class Jumping : MonoBehaviour
                         PlayAudio();
                         CreateHaptic();
 
-                        oldPos.transform.position = trackingSpaceRoot.transform.position;
-                        oldPos.transform.rotation = trackingSpaceRoot.transform.rotation;
-                        trackingSpaceRoot.transform.position = lastRayCastHit.point;
-                        trackingSpaceRoot.transform.rotation = newPos.transform.rotation;
-                        Debug.Log("Jumping! " + Time.deltaTime);
+                        FadeBlackOutSquare();
                     }
                 }
             }
         }
+    }
+
+    public async void FadeBlackOutSquare(int fadeSpeed = 5)
+    {
+        Color objectColor = blackSqr.GetComponent<SpriteRenderer>().color;
+        float fadeAmount;
+
+
+        while (blackSqr.GetComponent<SpriteRenderer>().color.a < 1)
+        {
+            fadeAmount = objectColor.a + (fadeSpeed * Time.deltaTime);
+
+            objectColor = new Color(objectColor.r, objectColor.g, objectColor.b, fadeAmount);
+            blackSqr.GetComponent<SpriteRenderer>().color = objectColor;
+            await Task.Yield();
+        }
+        oldPos.transform.position = trackingSpaceRoot.transform.position;
+        oldPos.transform.rotation = trackingSpaceRoot.transform.rotation;
+        trackingSpaceRoot.transform.position = lastRayCastHit.point;
+        trackingSpaceRoot.transform.rotation = newPos.transform.rotation;
+        while (blackSqr.GetComponent<SpriteRenderer>().color.a > 0)
+        {
+            fadeAmount = objectColor.a - (fadeSpeed * Time.deltaTime);
+
+            objectColor = new Color(objectColor.r, objectColor.g, objectColor.b, fadeAmount);
+            blackSqr.GetComponent<SpriteRenderer>().color = objectColor;
+            await Task.Yield();
+        }
+
     }
 
     public void PlayAudio()

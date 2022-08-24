@@ -149,8 +149,6 @@ public class RayPickerMod : MonoBehaviour
                 }
                 if (bButtonWasPressed && gripButtonPressedNow)
                 {
-
-
                     objectPickedUP = ColissionScript.collidedObject;
                     objectPickedUP.transform.parent = gameObject.transform; // see Transform.parent https://docs.unity3d.com/ScriptReference/Transform-parent.html?_ga=2.21222203.1039085328.1595859162-225834982.1593000816
                     if (PickedUpObjectPositionNotControlledByPhysics)
@@ -218,7 +216,6 @@ public class RayPickerMod : MonoBehaviour
 
     public void MakeOriginalColor()
     {
-        CollidedObjectMain = ColissionScript.collidedObject;
         var objectRenderer = CollidedObjectMain.GetComponent<Renderer>();
         objectRenderer.material.SetColor("_Color", ColorBeforeChanges);
     }
@@ -400,7 +397,7 @@ public class RayPickerMod : MonoBehaviour
                     }
                     if (thumbstickAxis.y > -0.3)
                     {
-                        MakeSelectorLonger(); ;
+                        MakeSelectorLonger(); 
 
                     }
                 }

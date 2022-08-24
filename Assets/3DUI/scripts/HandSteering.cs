@@ -5,6 +5,7 @@ using UnityEngine.XR;
 
 public class HandSteering: MonoBehaviour
 {
+    [SerializeField] private string RayCollisionLayer = "Default";
     [SerializeField] private float speedInMeterPerSecond = 1;
     [SerializeField] private float angleInDegreePerSecond = 25;
     [SerializeField] private float anglePerClick = 45;
@@ -21,6 +22,8 @@ public class HandSteering: MonoBehaviour
     private bool isStickPressedNow;
     private bool isTriggerPressedPrevFrame;
     private bool isTriggerPressedCurrFrame;
+    private int RayDistance;
+    private RaycastHit lastRayCastHit;
 
     [SerializeField] private AnimationCurve accelerationCurve;
     [SerializeField] private float MinSpeed = 5;
@@ -44,6 +47,7 @@ public class HandSteering: MonoBehaviour
     void Update()
     {
         MoveTrackingSpaceRootWithHandSteering();
+        getPointCollidingWithRayCasting();
     }
 
     //--------------------------------------------------------
@@ -79,6 +83,21 @@ public class HandSteering: MonoBehaviour
         handController = this.gameObject; // i.e. with this script component and an XR controller component
     }
 
+    private void getPointCollidingWithRayCasting()
+    {
+        // see raycast example from https://docs.unity3d.com/ScriptReference/Physics.Raycast.html
+        if (Physics.Raycast(transform.position,
+            transform.TransformDirection(Vector3.forward),
+            out RaycastHit hit,
+            Mathf.Infinity,
+            1 << LayerMask.NameToLayer(RayCollisionLayer))) // 1 << because must use bit shifting to get final mask!
+        {
+            Debug.DrawRay(transform.position, transform.TransformDirection(Vector3.forward) * hit.distance, Color.yellow);
+            // Debug.Log("Ray collided with:  " + hit.collider.gameObject + " collision point: " + hit.point);
+            Debug.DrawLine(hit.point, (hit.point + hit.normal * 2));
+            lastRayCastHit = hit;
+        }
+    }
 
     private void MoveTrackingSpaceRootWithHandSteering()  // simple - with no strafing 
     {
@@ -141,7 +160,7 @@ public class HandSteering: MonoBehaviour
                 else
                 {
                     trackingSpaceRoot.transform.position +=
-                   handController.transform.forward * (speedInMeterPerSecond * Time.deltaTime * thumbstickAxisValue.y);
+                   handController.transform.forward * (speedInMeterPerSecond * lastRayCastHit.distance * Time.deltaTime * thumbstickAxisValue.y);
                 }
 
 

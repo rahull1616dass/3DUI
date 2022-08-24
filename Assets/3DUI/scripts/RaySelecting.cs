@@ -19,12 +19,18 @@ public class RaySelecting : MonoBehaviour
 
     private RaycastHit lastRayCastHit;
     private bool bButtonPressedPrevFrame = false;
+    private bool ButtonGripWasPressed = false;
     private GameObject objectPickedUP = null;
     private GameObject objectMarked = null;
     private GameObject previousObjectCollidingWithRay = null;
-    private GameObject lastObjectCollidingWithRay = null;
+    [SerializeField] private GameObject lastObjectCollidingWithRay = null;
     private bool IsThereAnewObjectCollidingWithRay = false;
-    private bool gButtonPressedNow;
+
+    private bool triggerButtonWasPressed = false;
+    private bool stickButtonWasPressed = false;
+    public static List<GameObject> objectsSelected = new List<GameObject>();
+
+    private ObjectCreator objectCreatorInstance;
 
     List<GameObject> listOfSelectedObjects = new List<GameObject>();
 
@@ -37,6 +43,7 @@ public class RaySelecting : MonoBehaviour
         GetRightHandDevice();
         GetRighHandController();
         GetTrackingSpaceRoot();
+        objectCreatorInstance = GetComponent<ObjectCreator>();
     }
 
     void Update()
@@ -220,30 +227,34 @@ public class RaySelecting : MonoBehaviour
                                 }
                             }
                         }
-                        else
-                        {
-                            PlayAudio();
-                            CreateHeptic();
-                            listOfSelectedObjects.Add(objectPickedUP);
-                            MarkObject(objectPickedUP);
+                    }
+                    else
+                    {
+                        PlayAudio();
+                        CreateHeptic();
+                        listOfSelectedObjects.Add(objectPickedUP);
+                        MarkObject(objectPickedUP);
 
-                            if (righHandDevice.TryGetFeatureValue(CommonUsages.gripButton, out bool gButtonPressedNow))
+                        if (righHandDevice.TryGetFeatureValue(CommonUsages.gripButton, out bool goButtonPressedNow))
+                        {
+                            if (goButtonPressedNow)
                             {
-                                if (gButtonPressedNow)
+                                foreach (GameObject actualObject in listOfSelectedObjects)
                                 {
-                                    foreach (GameObject actualObject in listOfSelectedObjects)
-                                    {
-                                        actualObject.transform.parent = gameObject.transform;
-                                    }
+                                    actualObject.transform.parent = gameObject.transform;
                                 }
                             }
                         }
 
-                        bButtonPressedPrevFrame = false;
-                        objectPickedUP = null;
                     }
+
+                    bButtonPressedPrevFrame = false;
+                    objectPickedUP = null;
                 }
+
             }
+
+
         }
     }
 
