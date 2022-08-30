@@ -175,6 +175,7 @@ public class Jumping : MonoBehaviour
 
     public async void FadeBlackOutSquare(int fadeSpeed = 5)
     {
+        blackSqr.SetActive(true);
         Color objectColor = blackSqr.GetComponent<SpriteRenderer>().color;
         float fadeAmount;
 
@@ -199,7 +200,7 @@ public class Jumping : MonoBehaviour
             blackSqr.GetComponent<SpriteRenderer>().color = objectColor;
             await Task.Yield();
         }
-
+        blackSqr.SetActive(false);
     }
 
     public void PlayAudio()
