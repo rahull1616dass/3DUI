@@ -49,6 +49,8 @@ public class RaySelecting : MonoBehaviour
         GetRightHandDevice();
         GetRighHandController();
         GetTrackingSpaceRoot();
+
+        objectCreatorInstance = GetComponent<ObjectCreator>();
     }
 
     void Update()
@@ -429,7 +431,10 @@ public class RaySelecting : MonoBehaviour
     }
 
 
-
+    public void DeletionMode(bool active)
+    {
+        DeletionModeActivated = true;
+    }
 
 
     private void CreateHeptic()
