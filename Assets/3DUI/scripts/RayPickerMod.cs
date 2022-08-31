@@ -34,7 +34,8 @@ public class RayPickerMod : MonoBehaviour
     public bool gribButtonNotPressed = true;
     public bool ObjectNotCollided = true;
     public bool ObjectGreyed = false;
-    public bool objectActualPicked = false;
+    public bool objectActualPicked = false; 
+    public bool colliderLocked = false;
 
     /// 
     ///  Events
@@ -46,6 +47,9 @@ public class RayPickerMod : MonoBehaviour
         GetRighHandController();
         GetTrackingSpaceRoot();
         ColissionScript = selectorObject.GetComponentInChildren<TriggerHandler>();
+        SelectorVariable.SetActive(true);
+        this.gameObject.GetComponent<XRRayInteractor>().enabled = false;
+        this.gameObject.GetComponent<XRInteractorLineVisual>().enabled = false;
     }
 
     void Update()
@@ -142,7 +146,8 @@ public class RayPickerMod : MonoBehaviour
                 if (!bButtonWasPressed && gripButtonPressedNow)
                 {
                     bButtonWasPressed = true;
-                    GenerateSound();
+                    //GenerateSound();
+                    GetComponents<AudioSource>()[1].Play();
                     GenerateVibrations();
                     MakeRed();
                     objectActualPicked = true;
@@ -167,6 +172,7 @@ public class RayPickerMod : MonoBehaviour
 
                     if (objectPickedUP != null) // already pick up an object?
                     {
+                        gameObject.GetComponents<AudioSource>()[2].Play();
                         if (PickedUpObjectPositionNotControlledByPhysics)
                         {
                             Rigidbody rb = objectPickedUP.GetComponent<Rigidbody>();
@@ -196,6 +202,7 @@ public class RayPickerMod : MonoBehaviour
 
     public void MakeRed()
     {
+        colliderLocked = false;
         CollidedObjectMain = ColissionScript.collidedObject;
         var objectRenderer = CollidedObjectMain.GetComponent<Renderer>();
         var controllerRenderer = rightHandController.gameObject.GetComponent<Renderer>();

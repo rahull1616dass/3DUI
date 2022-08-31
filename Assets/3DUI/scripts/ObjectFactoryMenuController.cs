@@ -153,5 +153,8 @@ public class ObjectFactoryMenuController : MonoBehaviour
             menuInstanced = null;
         }
     }
-
+    public void CreateSound()
+    {
+        this.gameObject.GetComponents<AudioSource>()[0].Play();
+    }
 }

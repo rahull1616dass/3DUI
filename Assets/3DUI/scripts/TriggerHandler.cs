@@ -29,7 +29,11 @@ public class TriggerHandler : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        collidedObject = other.gameObject;
+        if (!MainPickingScript.colliderLocked)
+        {
+            collidedObject = other.gameObject;
+        }
+
         if (MainPickingScript.objectActualPicked == false)
         {
             MainPickingScript.MakeGrey();

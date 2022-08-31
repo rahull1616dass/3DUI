@@ -13,12 +13,7 @@ public class ObjectCreator : MonoBehaviour
     [SerializeField] private GameObject CapsulePrefab;
     [SerializeField] private GameObject SpherePrefab;
 
-    private RaySelecting raySelectingInstance;
-
-    private void Start()
-    {
-        raySelectingInstance = GetComponent<RaySelecting>();
-    }
+    private List<GameObject> createdObjects = new List<GameObject>();
 
     public void CreateBlockPrefab(Transform Where)
     {
@@ -26,28 +21,37 @@ public class ObjectCreator : MonoBehaviour
 
         blockInstance.transform.localScale = new Vector3(0.2f, 0.2f, 0.2f);
 
+        createdObjects.Add(blockInstance);
+
     }
 
     public void CreateCylinderPrefab(Transform Where)
     {
-        GameObject blockInstance = Instantiate(CylinderPrefab, Where.position, Quaternion.identity);
+        GameObject cylinderInstance = Instantiate(CylinderPrefab, Where.position, Quaternion.identity);
 
-        blockInstance.transform.localScale = new Vector3(0.2f, 0.2f, 0.2f);
+        cylinderInstance.transform.localScale = new Vector3(0.2f, 0.2f, 0.2f);
+        createdObjects.Add(cylinderInstance);
 
     }
     public void CreateCapsulePrefab(Transform Where)
     {
-        GameObject blockInstance = Instantiate(CapsulePrefab, Where.position, Quaternion.identity);
-
-        blockInstance.transform.localScale = new Vector3(0.2f, 0.2f, 0.2f);
-
+        GameObject capsuleInstance = Instantiate(CapsulePrefab, Where.position, Quaternion.identity);
+        capsuleInstance.transform.localScale = new Vector3(0.2f, 0.2f, 0.2f);
+        createdObjects.Add(capsuleInstance);
     }
     public void CreateSpherePrefab(Transform Where)
     {
-        GameObject blockInstance = Instantiate(SpherePrefab, Where.position, Quaternion.identity);
+        GameObject sphereInstance = Instantiate(SpherePrefab, Where.position, Quaternion.identity);
+        sphereInstance.transform.localScale = new Vector3(0.2f, 0.2f, 0.2f);
+        createdObjects.Add(sphereInstance);
+    }
 
-        blockInstance.transform.localScale = new Vector3(0.2f, 0.2f, 0.2f);
-
+    public void DestroyCreatedobjects()
+    {
+        foreach (GameObject gameObject in createdObjects)
+        {
+            Destroy(gameObject);
+        }
     }
 
 }

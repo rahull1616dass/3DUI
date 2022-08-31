@@ -219,6 +219,7 @@ public class Jumping : MonoBehaviour
                 float amplitude = 0.5f;
                 float duration = 0.5f;
                 handDeviceLeft.SendHapticImpulse(channel, amplitude, duration);
+                gameObject.GetComponents<AudioSource>()[0].Play();
             }
         }
     }

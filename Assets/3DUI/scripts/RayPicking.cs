@@ -203,11 +203,13 @@ public class RayPicking : MonoBehaviour
                         objectPickedUP.transform.parent = null;
                         objectPickedUP = null;
                         Debug.Log("Object released: " + objectPickedUP);
+                        GenerateVibrations(1.5f, 0.5f);
+                        GetComponents<AudioSource>()[2].Play();
                     }
                     else
                     {
-                        GenerateSound(); 
-                        GenerateVibrations();
+                        GetComponents<AudioSource>()[1].Play();
+                        GenerateVibrations(0.5f,0.5f);
                         
                         objectPickedUP = lastRayCastHit.collider.gameObject;
                         objectPickedUP.transform.parent = gameObject.transform; // see Transform.parent https://docs.unity3d.com/ScriptReference/Transform-parent.html?_ga=2.21222203.1039085328.1595859162-225834982.1593000816
@@ -263,7 +265,7 @@ public class RayPicking : MonoBehaviour
         }
     }
 
-    private void GenerateVibrations()
+    private void GenerateVibrations(float amplitude, float duration)
     {
         HapticCapabilities capabilities;
         if (righHandDevice.TryGetHapticCapabilities(out capabilities))
@@ -271,8 +273,6 @@ public class RayPicking : MonoBehaviour
             if (capabilities.supportsImpulse)
             {
                 uint channel = 0;
-                float amplitude = 0.5f;
-                float duration = 1.0f;
                 righHandDevice.SendHapticImpulse(channel, amplitude, duration);
             }
         }

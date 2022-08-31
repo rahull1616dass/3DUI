@@ -37,6 +37,7 @@ public class RaySelecting : MonoBehaviour
     public void DestroyAllSelectedBlocks()
     {
         Debug.Log("Method will start");
+        CreateHeptic(0.5f, 0.5f);
         foreach (GameObject gameObject in objectsSelected)
         {
             Destroy(gameObject);
@@ -49,7 +50,8 @@ public class RaySelecting : MonoBehaviour
         GetRightHandDevice();
         GetRighHandController();
         GetTrackingSpaceRoot();
-
+        GetComponent<RayPicking>().enabled = false;
+        GetComponent<RayPickerMod>().enabled = false;
         objectCreatorInstance = GetComponent<ObjectCreator>();
     }
 
@@ -263,6 +265,7 @@ public class RaySelecting : MonoBehaviour
                             {
                                 rb.isKinematic = false;
                             }
+                            outlineGreen();
                         }
 
                         selectedObject.transform.parent = null;
@@ -284,6 +287,7 @@ public class RaySelecting : MonoBehaviour
                             {
                                 rb.isKinematic = true;
                             }
+                            outlineColor();
                         }
                     }
                 }
@@ -291,18 +295,19 @@ public class RaySelecting : MonoBehaviour
         }
     }
 
-    private void SelectObjects(GameObject gameObject) //Selektieren mit A Button
+    private void SelectObjects(GameObject gameObject) //Select with A Button
     {
         //neu hinzufügen des Objekts zur Liste
         objectsSelected.Add(gameObject);
         OutlineSelectedObjectCollidingWithRay(gameObject, true);
+        this.gameObject.GetComponents<AudioSource>()[1].Play();
     }
 
-    private void DiselectObjects(GameObject gameObject) //aktuelles Objekt deselektieren bzw. aus Liste entfernen
+    private void DiselectObjects(GameObject gameObject) //deselect current object or remove it from list
     {
         objectsSelected.Remove(gameObject);
         OutlineSelectedObjectCollidingWithRay(gameObject, false);
-        Debug.Log("Objekt gelöscht");
+        this.gameObject.GetComponents<AudioSource>()[2].Play();
     }
 
     public void DestroyByPressingB() {  //Destroy by pressing B Button    {
@@ -311,7 +316,7 @@ public class RaySelecting : MonoBehaviour
         {
             if (rightHandDevice.TryGetFeatureValue(CommonUsages.secondaryButton, out bool bButtonBPressedNow))
             {
-                if (bButtonBPressedNow) // wenn B gedrückt, sollen das Object das gerade berührt wird gelöscht werden)
+                if (bButtonBPressedNow) // if B is pressed, the object that is currently touched should be deleted
                 {
                     Destroy(lastObjectCollidingWithRay);
                 }
@@ -329,6 +334,7 @@ public class RaySelecting : MonoBehaviour
             {
                 if (thumbStickAxisValue.y > 0.9f)
                 {
+                    this.gameObject.GetComponents<AudioSource>()[0].Play();
                     foreach (GameObject gameObject in objectsSelected)
                     {
                         gameObject.transform.localScale += new Vector3(0.1f, 0.1f, 0.1f);
@@ -336,6 +342,7 @@ public class RaySelecting : MonoBehaviour
                 }
                 else if (thumbStickAxisValue.y < -0.9f)
                 {
+                    GetComponents<AudioSource>()[0].Play();
                     foreach (GameObject gameObject in objectsSelected)
                     {
                         gameObject.transform.localScale -= new Vector3(0.1f, 0.1f, 0.1f);
@@ -361,6 +368,7 @@ public class RaySelecting : MonoBehaviour
                 if (!triggerButton)
                 {
                     ScaleAllSelectedObjects();
+                    GetComponents<AudioSource>()[0].Play();
                 }
             }
         }
@@ -373,6 +381,7 @@ public class RaySelecting : MonoBehaviour
             if (thumbstickAxis.y > thumbstickDeadZone ||
                 thumbstickAxis.y < -thumbstickDeadZone)
             {
+                GetComponents<AudioSource>()[0].Play();
                 // Liste Transformen
                 foreach (GameObject gameObject in objectsSelected)
                 {
@@ -436,8 +445,7 @@ public class RaySelecting : MonoBehaviour
         DeletionModeActivated = true;
     }
 
-
-    private void CreateHeptic()
+    private void CreateHeptic(float amplitude, float duration)
     {
         HapticCapabilities capabilities;
         if (rightHandDevice.TryGetHapticCapabilities(out capabilities))
@@ -445,8 +453,6 @@ public class RaySelecting : MonoBehaviour
             if (capabilities.supportsImpulse)
             {
                 uint channel = 0;
-                float amplitude = 0.5f;
-                float duration = 1.0f;
                 rightHandDevice.SendHapticImpulse(channel, amplitude, duration);
             }
         }
@@ -454,15 +460,60 @@ public class RaySelecting : MonoBehaviour
 
     private void PlayAudio()
     {
-        AudioSource audioSource = GetComponent<AudioSource>();
-        if (audioSource != null)
+        GetComponents<AudioSource>()[1].Play();
+    }
+
+
+    private void outlineGreen()
+    {
+
+        foreach (GameObject selectedObject in objectsSelected)
         {
-            audioSource.Play();
-        }
-        else
-        {
-            Debug.LogError("No Audio Source Found!");
+
+            var outliner = selectedObject.GetComponent<OutlineModified>();
+            if (outliner == null) // if not, we will add a component to be able to outline it
+            {
+                //Debug.Log("Outliner added t" + lastObjectCollidingWithRay.gameObject.ToString());
+                outliner = selectedObject.AddComponent<OutlineModified>();
+            }
+
+            outliner.enabled = enabled;
+
+
+            outliner.OutlineColor = Color.green;
         }
     }
+
+    private void outlineColor()
+    {
+
+        foreach (GameObject selectedObject in objectsSelected)
+        {
+
+            var outliner = selectedObject.GetComponent<OutlineModified>();
+            if (outliner == null) // if not, we will add a component to be able to outline it
+            {
+                //Debug.Log("Outliner added t" + lastObjectCollidingWithRay.gameObject.ToString());
+                outliner = selectedObject.AddComponent<OutlineModified>();
+            }
+
+            outliner.enabled = enabled;
+
+            if (rightHandDevice.TryGetFeatureValue(CommonUsages.triggerButton, out bool triggerButton))
+            {
+                //primary2DAxisClick
+                if (triggerButton)
+                {
+                    outliner.OutlineColor = Color.red;
+                }
+                else
+                {
+                    outliner.OutlineColor = Color.yellow;
+                }
+            }
+        }
+    }
+
+
 
 }
