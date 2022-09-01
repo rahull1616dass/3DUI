@@ -132,4 +132,17 @@ public class GrabthroughtAair : MonoBehaviour
             }
         }
     }
+
+    private void CreateHeptic(float amplitude, float duration)
+    {
+        HapticCapabilities capabilities;
+        if (handDeviceLeft.TryGetHapticCapabilities(out capabilities))
+        {
+            if (capabilities.supportsImpulse)
+            {
+                uint channel = 0;
+                handDeviceLeft.SendHapticImpulse(channel, amplitude, duration);
+            }
+        }
+    }
 }

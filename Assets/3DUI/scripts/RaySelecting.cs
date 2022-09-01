@@ -49,7 +49,8 @@ public class RaySelecting : MonoBehaviour
     {
         GetRightHandDevice();
         GetRighHandController();
-        GetTrackingSpaceRoot();
+        //GetTrackingSpaceRoot();
+
         GetComponent<RayPicking>().enabled = false;
         GetComponent<RayPickerMod>().enabled = false;
         objectCreatorInstance = GetComponent<ObjectCreator>();
@@ -150,31 +151,34 @@ public class RaySelecting : MonoBehaviour
     {
         if (IsThereAnewObjectCollidingWithRay && !objectsSelected.Contains(lastObjectCollidingWithRay))
         {
-            //add outline to new one
-            var outliner = lastObjectCollidingWithRay.GetComponent<OutlineModified>();
-            if (lastObjectCollidingWithRay.tag != "VR Controller")
+            if (lastObjectCollidingWithRay != null)
             {
-                if (outliner == null) // if not, we will add a component to be able to outline it
+                //add outline to new one
+                var outliner = lastObjectCollidingWithRay.GetComponent<OutlineModified>();
+                if (lastObjectCollidingWithRay.tag != "VR Controller")
                 {
-                    //Debug.Log("Outliner added t" + lastObjectCollidingWithRay.gameObject.ToString());
-                    outliner = lastObjectCollidingWithRay.AddComponent<OutlineModified>();
-                }
+                    if (outliner == null) // if not, we will add a component to be able to outline it
+                    {
+                        //Debug.Log("Outliner added t" + lastObjectCollidingWithRay.gameObject.ToString());
+                        outliner = lastObjectCollidingWithRay.AddComponent<OutlineModified>();
+                    }
 
-                if (outliner != null)
-                {
-                    outliner.enabled = true;
-                    outliner.OutlineColor = Color.blue;
-                    //Debug.Log("outline new object color"+ lastObjectCollidingWithRay);
-                }
-                // remove outline from previous one
-                //add outline new one
-                if (previousObjectCollidingWithRay != null && !objectsSelected.Contains(previousObjectCollidingWithRay))
-                {
-                    outliner = previousObjectCollidingWithRay.GetComponent<OutlineModified>();
                     if (outliner != null)
                     {
-                        outliner.enabled = false;
-                        //Debug.Log("outline new object color"+ previousObjectCollidingWithRay);
+                        outliner.enabled = true;
+                        outliner.OutlineColor = Color.blue;
+                        //Debug.Log("outline new object color"+ lastObjectCollidingWithRay);
+                    }
+                    // remove outline from previous one
+                    //add outline new one
+                    if (previousObjectCollidingWithRay != null && !objectsSelected.Contains(previousObjectCollidingWithRay))
+                    {
+                        outliner = previousObjectCollidingWithRay.GetComponent<OutlineModified>();
+                        if (outliner != null)
+                        {
+                            outliner.enabled = false;
+                            //Debug.Log("outline new object color"+ previousObjectCollidingWithRay);
+                        }
                     }
                 }
             }
@@ -334,7 +338,7 @@ public class RaySelecting : MonoBehaviour
             {
                 if (thumbStickAxisValue.y > 0.9f)
                 {
-                    this.gameObject.GetComponents<AudioSource>()[0].Play();
+                    GetComponents<AudioSource>()[0].Play();
                     foreach (GameObject gameObject in objectsSelected)
                     {
                         gameObject.transform.localScale += new Vector3(0.1f, 0.1f, 0.1f);
@@ -368,7 +372,7 @@ public class RaySelecting : MonoBehaviour
                 if (!triggerButton)
                 {
                     ScaleAllSelectedObjects();
-                    GetComponents<AudioSource>()[0].Play();
+                    //GetComponents<AudioSource>()[0].Play();
                 }
             }
         }

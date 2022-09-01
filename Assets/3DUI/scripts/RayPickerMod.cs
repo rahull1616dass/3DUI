@@ -48,8 +48,9 @@ public class RayPickerMod : MonoBehaviour
         GetTrackingSpaceRoot();
         ColissionScript = selectorObject.GetComponentInChildren<TriggerHandler>();
         SelectorVariable.SetActive(true);
-        this.gameObject.GetComponent<XRRayInteractor>().enabled = false;
-        this.gameObject.GetComponent<XRInteractorLineVisual>().enabled = false;
+        GetComponent<XRRayInteractor>().enabled = false;
+        GetComponent<XRInteractorLineVisual>().enabled = false;
+        GetComponent<RayPicking>().enabled = false;
     }
 
     void Update()
