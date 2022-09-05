@@ -89,7 +89,7 @@ public class GrabthroughtAair : MonoBehaviour
                     }
                     if (bButtonWasPressed && gripButton && isTriggerPressedOnCurrFrame)
                     {
-
+                        CreateHeptic(0.5f, 0.2f);
                         trackingSpaceRoot.transform.position -=
                         (handControllerGameObject.transform.position - OldPosition) * velocity;
 
@@ -99,9 +99,6 @@ public class GrabthroughtAair : MonoBehaviour
                 }
 
             }
-
-
-
 
         }
 
@@ -126,8 +123,6 @@ public class GrabthroughtAair : MonoBehaviour
                     {
                         trackingSpaceRoot.transform.localScale -= trackingSpaceRoot.transform.localScale * Time.deltaTime * Scale;
                     }
-
-
                 }
             }
         }

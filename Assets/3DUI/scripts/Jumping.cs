@@ -165,7 +165,10 @@ public class Jumping : MonoBehaviour
 
                         PlayAudio();
                         CreateHaptic();
-
+                        oldPos.transform.position = trackingSpaceRoot.transform.position;
+                        oldPos.transform.rotation = trackingSpaceRoot.transform.rotation;
+                        trackingSpaceRoot.transform.position = lastRayCastHit.point;
+                        trackingSpaceRoot.transform.rotation = newPos.transform.rotation;
                         FadeBlackOutSquare();
                     }
                 }
@@ -188,10 +191,7 @@ public class Jumping : MonoBehaviour
             blackSqr.GetComponent<SpriteRenderer>().color = objectColor;
             await Task.Yield();
         }
-        oldPos.transform.position = trackingSpaceRoot.transform.position;
-        oldPos.transform.rotation = trackingSpaceRoot.transform.rotation;
-        trackingSpaceRoot.transform.position = lastRayCastHit.point;
-        trackingSpaceRoot.transform.rotation = newPos.transform.rotation;
+        
         while (blackSqr.GetComponent<SpriteRenderer>().color.a > 0)
         {
             fadeAmount = objectColor.a - (fadeSpeed * Time.deltaTime);
