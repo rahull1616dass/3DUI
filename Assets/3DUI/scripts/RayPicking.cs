@@ -6,11 +6,11 @@ using UnityEngine.XR.Interaction.Toolkit;
 
 public class RayPicking : MonoBehaviour
 {
-    [SerializeField] private float translationIncrement = 0.1f;
-    [SerializeField] private float rotationIncrement = 1.0f;
-    [SerializeField] private float thumbstickDeadZone = 0.5f;  // a bit of a dead zone (make it less sensitive to axis movement)
-    [SerializeField] private string RayCollisionLayer = "Default";
-    [SerializeField] private bool PickedUpObjectPositionNotControlledByPhysics = true; //otherwise object position will be still computed by physics engine, even when attached to ray
+    public float translationIncrement = 0.1f;
+    public float rotationIncrement = 1.0f;
+    public float thumbstickDeadZone = 0.5f;  // a bit of a dead zone (make it less sensitive to axis movement)
+    public string RayCollisionLayer = "Default";
+    public bool PickedUpObjectPositionNotControlledByPhysics = true; //otherwise object position will be still computed by physics engine, even when attached to ray
 
     private InputDevice righHandDevice;
     private GameObject rightHandController;
@@ -40,7 +40,7 @@ public class RayPicking : MonoBehaviour
         if (objectPickedUP == null)
         {
             GetTargetedObjectCollidingWithRayCasting();
-            GrabObject();
+            GetTargetedObjectGrabbingByHand();
             UpdateObjectCollidingWithRay();
             UpdateFlagNewObjectCollidingWithRay();
             OutlineObjectCollidingWithRay();
@@ -57,6 +57,9 @@ public class RayPicking : MonoBehaviour
 
     private void GetRightHandDevice()
     {
+        var inputDevices = new List<InputDevice>();
+        InputDevices.GetDevices(inputDevices);
+
         var desiredCharacteristics = InputDeviceCharacteristics.HeldInHand
             | InputDeviceCharacteristics.Right
             | InputDeviceCharacteristics.Controller;
@@ -102,7 +105,8 @@ public class RayPicking : MonoBehaviour
         }
     }
 
-    private void GrabObject()
+
+    private void GetTargetedObjectGrabbingByHand()
     {
         // see raycast example from https://docs.unity3d.com/ScriptReference/Physics.Raycast.html
         if (Physics.Raycast(transform.position,
@@ -198,18 +202,19 @@ public class RayPicking : MonoBehaviour
                             if (rb != null)
                             {
                                 rb.isKinematic = false;
+                                 
                             }
                         }
+                        gameObject.GetComponents<AudioSource>()[2].Play();
                         objectPickedUP.transform.parent = null;
                         objectPickedUP = null;
                         Debug.Log("Object released: " + objectPickedUP);
-                        GenerateVibrations(1.5f, 0.5f);
-                        GetComponents<AudioSource>()[2].Play();
+                        GenerateVibrations(1.5f, 0.3f);
                     }
                     else
                     {
-                        GetComponents<AudioSource>()[1].Play();
-                        GenerateVibrations(0.5f,0.5f);
+                        gameObject.GetComponents<AudioSource>()[1].Play(); 
+                        GenerateVibrations(0.5f, 0.5f);
                         
                         objectPickedUP = lastRayCastHit.collider.gameObject;
                         objectPickedUP.transform.parent = gameObject.transform; // see Transform.parent https://docs.unity3d.com/ScriptReference/Transform-parent.html?_ga=2.21222203.1039085328.1595859162-225834982.1593000816
@@ -265,7 +270,7 @@ public class RayPicking : MonoBehaviour
         }
     }
 
-    private void GenerateVibrations(float amplitude, float duration)
+    private void GenerateVibrations(float amplitude,float duration)
     {
         HapticCapabilities capabilities;
         if (righHandDevice.TryGetHapticCapabilities(out capabilities))

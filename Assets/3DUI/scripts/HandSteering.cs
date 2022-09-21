@@ -5,13 +5,15 @@ using UnityEngine.XR;
 
 public class HandSteering: MonoBehaviour
 {
-    [SerializeField] private string RayCollisionLayer = "Default";
-    [SerializeField] private float speedInMeterPerSecond = 1;
-    [SerializeField] private float angleInDegreePerSecond = 25;
-    [SerializeField] private float anglePerClick = 45;
-    [SerializeField] private float currentSpeedInMperS = 0;
-    [SerializeField] private float curveVal = 0;
-
+    
+    public string RayCollisionLayer = "Default";
+    
+    public float speedInMeterPerSecond = 1;
+    public float CurrentSpeedInMeterPerSecond = 0;
+    public float angleInDegreePerSecond = 25;
+    public float anglePerClick = 45;
+    public float CurveValue = 0;
+    private int RayDistance;
 
     private InputDevice handDevice;
     private GameObject handController;
@@ -19,17 +21,13 @@ public class HandSteering: MonoBehaviour
     private bool bModeSnapRotation;
     private bool bModeSpeed;
     private bool isStickWasPressed;
-    private bool isStickPressedNow;
-    private bool isTriggerPressedPrevFrame;
-    private bool isTriggerPressedCurrFrame;
-    private int RayDistance;
+    private bool isTriggerWasPressed;
+    private bool isTriggerPressedNow;
     private RaycastHit lastRayCastHit;
 
-    [SerializeField] private AnimationCurve accelerationCurve;
-    [SerializeField] private float MinSpeed = 5;
-    [SerializeField] private float MaxSpeed = 50;
-
-
+    public AnimationCurve highSpeedModeAccelerationCurve;
+    public float MinSpeed = 5;
+    public float MaxSpeed= 50;
 
 
     // aka tracking space's position in virtual environment 
@@ -54,8 +52,10 @@ public class HandSteering: MonoBehaviour
 
     private void GetHandDevice()
     {
-      
-       var desiredCharacteristics = InputDeviceCharacteristics.HeldInHand
+        var inputDevices = new List<InputDevice>();
+        InputDevices.GetDevices(inputDevices);
+
+        var desiredCharacteristics = InputDeviceCharacteristics.HeldInHand
             | InputDeviceCharacteristics.Left
             | InputDeviceCharacteristics.Controller;
 
@@ -105,7 +105,7 @@ public class HandSteering: MonoBehaviour
         {
             // check if smooth or snap rotation mode
             // see https://docs.unity3d.com/Manual/xr_input.html
-            if (handDevice.TryGetFeatureValue(CommonUsages.primary2DAxisClick, out isStickPressedNow))
+            if (handDevice.TryGetFeatureValue(CommonUsages.primary2DAxisClick, out bool isStickPressedNow))
             {
                 if (isStickPressedNow)
                 {
@@ -118,66 +118,80 @@ public class HandSteering: MonoBehaviour
                     if(bModeSnapRotation) Debug.Log("Snap Turning Is ON");
                     else Debug.Log("Snap Turning Is OFF (Smooth Rotation");
                 }
-
             }
 
-            if(handDevice.TryGetFeatureValue(CommonUsages.triggerButton, out isTriggerPressedCurrFrame))
+            // check if slow or speed mode
+            if (handDevice.TryGetFeatureValue(CommonUsages.triggerButton, out bool isTriggerPressedNow))
             {
-                if (isTriggerPressedCurrFrame) { 
-                    isTriggerPressedPrevFrame = true;
-                }
-                else if(isTriggerPressedPrevFrame)
+                if (isTriggerPressedNow)
                 {
-                    bModeSpeed = !bModeSpeed;
-                    isTriggerPressedPrevFrame = false;
+                   // speedInMeterPerSecond = 5;
+                    isTriggerWasPressed = true;
+
+                }
+                else if (isTriggerWasPressed) // release
+                {
+            
+                 bModeSpeed = !bModeSpeed;
+                 isTriggerWasPressed = false;
                     speedInMeterPerSecond = 1;
-                    if (bModeSpeed)
-                        Debug.Log("SpeedModeIsOn");
-                    else
-                        Debug.Log("SpeedModeIsOff");
+                 if (bModeSpeed) Debug.Log("SpeedMode Is ON");
+                 else Debug.Log("SpeedMode Is OFF ");
                 }
             }
 
-            Vector2 thumbstickAxisValue;
 
+                // see https://docs.unity3d.com/Manual/xr_input.html
+                Vector2 thumbstickAxisValue; //  where left (-1.0,0.0), right (1.0,0.0), up (0.0,1.0), down (0.0,-1.0)
 
             if (handDevice.TryGetFeatureValue(CommonUsages.primary2DAxis, out thumbstickAxisValue))
             {
                 // Translate front/back Moving
+
                 if (bModeSpeed)
                 {
-                    Debug.Log(accelerationCurve.Evaluate(Time.time));
-                    if (thumbstickAxisValue.y < 0.3 & thumbstickAxisValue.y > -0.3)
-                    {
-                        accelerationCurve = AnimationCurve.Linear(Time.time, MinSpeed, Time.time + 5.0f, MaxSpeed);
-                    }
-                    else
-                    {
-                        trackingSpaceRoot.transform.position +=
-                        handController.transform.forward * (accelerationCurve.Evaluate(Time.time) * Time.deltaTime * thumbstickAxisValue.y);
-                    }
+
+                    //Debug.Log(highSpeedModeAccelerationCurve.Evaluate(Time.time));
+
+                   if (thumbstickAxisValue.y < 0.3 & thumbstickAxisValue.y > -0.3)
+                        {
+                            highSpeedModeAccelerationCurve = AnimationCurve.Linear(Time.time, MinSpeed, Time.time + 5.0f, MaxSpeed);
+                        }
+                        else
+                        {
+                            trackingSpaceRoot.transform.position +=
+                            handController.transform.forward * (highSpeedModeAccelerationCurve.Evaluate(Time.time) * Time.deltaTime * thumbstickAxisValue.y);  
+                        } 
                 }
+
                 else
                 {
-                    trackingSpaceRoot.transform.position +=
-                   handController.transform.forward * (speedInMeterPerSecond * lastRayCastHit.distance * Time.deltaTime * thumbstickAxisValue.y);
+
+                   trackingSpaceRoot.transform.position +=
+                    handController.transform.forward * (speedInMeterPerSecond  * lastRayCastHit.distance * Time.deltaTime * thumbstickAxisValue.y);
+
                 }
-
-
                 //// Translate Left/right Moving
+
+                
+
+
 
                 if (bModeSnapRotation)
                 {
+                     //do something here (Exercise tasks
 
-                    if(thumbstickAxisValue.x < 0.9f)
+                    if (thumbstickAxisValue.x < -0.9f) 
                     {
-                        trackingSpaceRoot.transform.Rotate(Vector3.up, -anglePerClick);
+                       trackingSpaceRoot.transform.Rotate(Vector3.up, -anglePerClick);
                     }
+                  
 
-                    else if(thumbstickAxisValue.x > 0.9f)
+                    if (thumbstickAxisValue.x > 0.9f) 
                     {
                         trackingSpaceRoot.transform.Rotate(Vector3.down, anglePerClick);
                     }
+                    
                 }
                 else
                 {

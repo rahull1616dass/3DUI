@@ -6,11 +6,11 @@ using UnityEngine.XR.Interaction.Toolkit;
 
 public class VirtualHandTechnique : MonoBehaviour
 {
-    [SerializeField] private float translationIncrement = 0.1f;
-    [SerializeField] private float rotationIncrement = 1.0f;
-    [SerializeField] private float thumbstickDeadZone = 0.5f;  // a bit of a dead zone (make it less sensitive to axis movement)
-    [SerializeField] private string RayCollisionLayer = "Default";
-    [SerializeField] private bool PickedUpObjectPositionNotControlledByPhysics = true; //otherwise object position will be still computed by physics engine, even when attached to ray
+    public float translationIncrement = 0.1f;
+    public float rotationIncrement = 1.0f;
+    public float thumbstickDeadZone = 0.5f;  // a bit of a dead zone (make it less sensitive to axis movement)
+    public string RayCollisionLayer = "Default";
+    public bool PickedUpObjectPositionNotControlledByPhysics = true; //otherwise object position will be still computed by physics engine, even when attached to ray
 
     private InputDevice righHandDevice;
     private GameObject rightHandController;
@@ -42,8 +42,8 @@ public class VirtualHandTechnique : MonoBehaviour
 
     void Update()
     {
-
-        if (CollidedObject != null)
+        
+        if(CollidedObject != null)
         {
             TryToGrapObject();
         }
@@ -115,12 +115,12 @@ public class VirtualHandTechnique : MonoBehaviour
         objectRenderer.material.SetColor("_Color", Color.red);
         controllerRenderer.material.SetColor("_Color", Color.red);
     }
-
+   
 
     private void TryToGrapObject()
     {
 
-
+      
         if (righHandDevice.isValid) // still connected?
         {
             if (righHandDevice.TryGetFeatureValue(CommonUsages.gripButton, out bool gripButtonPressedNow))
@@ -129,7 +129,7 @@ public class VirtualHandTechnique : MonoBehaviour
                 {
                     bButtonWasPressed = true;
                 }
-                if (bButtonWasPressed && gripButtonPressedNow)
+                if ( bButtonWasPressed && gripButtonPressedNow)
                 {
                     MakeRed();
                     GenerateSound();
@@ -149,7 +149,7 @@ public class VirtualHandTechnique : MonoBehaviour
                 }
                 if (!gripButtonPressedNow && bButtonWasPressed) // Button was released?
                 {
-
+                    
                     if (objectPickedUP != null) // already pick up an object?
                     {
                         if (PickedUpObjectPositionNotControlledByPhysics)
